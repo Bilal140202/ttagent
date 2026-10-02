@@ -47,9 +47,12 @@ jobs:
       - name: CLI smoke (offline paths only — never probe live endpoints)
         run: |
           python ttagent.py --version
-          python ttagent.py "!!!" --json; echo "exit=$? (expect 2)"
-          python ttagent.py "https://www.instagram.com/someuser/" --json; echo "exit=$? (expect 2)"
-          out=$(python ttagent.py "!!!" --json); echo "$out" | python -c "import json,sys; d=json.load(sys.stdin); assert d["error"]["code"]=='E_INVALID_INPUT'; print('fail-closed OK')"
+          rc=0; python ttagent.py "!!!" --json || rc=$?
+          echo "exit=$rc (expect 2)"; [ "$rc" = "2" ]
+          rc=0; python ttagent.py "https://www.tiktok.com/@someuser/" --json || rc=$?
+          echo "exit=$rc (expect 2)"; [ "$rc" = "2" ]
+          out=$(python ttagent.py "!!!" --json) || true
+          echo "$out" | python -c 'import json,sys; d=json.load(sys.stdin); assert d["error"]["code"]=="E_INVALID_INPUT"; print("fail-closed OK")'
 
       - name: Offline MCP handshake probe
         run: |
