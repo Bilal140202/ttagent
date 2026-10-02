@@ -1,0 +1,32 @@
+name: Bug report
+description: ttagent behaved against its documented contract
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes: {label: ttagent version, placeholder: "ttagent 1.0.0"}
+    validations: {required: true}
+  - type: dropdown
+    id: channel
+    attributes:
+      label: Invocation channel
+      options: ["CLI", "MCP host", "subprocess (--json)", "other"]
+    validations: {required: true}
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Failed pipeline stage (see agent.md §5)
+      options: ["discovery", "decoder", "fetcher", "orchestrator", "unknown"]
+    validations: {required: true}
+  - type: textarea
+    id: input
+    attributes:
+      label: Input shape (never paste real URLs — mask the shortcode)
+      placeholder: "tiktok.com/@user/video/<ID>"
+    validations: {required: true}
+  - type: textarea
+    id: errors
+    attributes:
+      label: errors[] / stderr tail
+      placeholder: 'Paste the errors array or last stderr lines'
+    validations: {required: true}

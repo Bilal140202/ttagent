@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Byte-compile all sources
+        run: |
+          python -m py_compile ttagent.py mcp_server.py demo.py \
+            ttagent/__init__.py ttagent/__main__.py scripts/sync_package.py
+
+      - name: Validate bundled JSON Schema
+        run: |
+          python - <<'PY'
+          import json, sys
+          doc = json.load(open("schema/video-result.schema.json"))
+          assert doc["$schema"] == "http://json-schema.org/draft-07/schema#"
+          assert doc["properties"]["schema_version"]["const"] == "1.0"
+          for d in ("image", "video", "error"):
+              assert d in doc["definitions"], d
+          print("schema OK")
+          PY
+
+      - name: Package sync check
+        run: python scripts/sync_package.py --check
+
+      - name: Offline test suite
+        run: python -m unittest discover -s tests -p "test_*.py" -v
+
+      - name: CLI smoke (offline paths only — never probe live endpoints)
+        run: |
+          python ttagent.py --version
+          python ttagent.py "!!!" --json; echo "exit=$? (expect 2)"
+          python ttagent.py "https://www.instagram.com/someuser/" --json; echo "exit=$? (expect 2)"
+          out=$(python ttagent.py "!!!" --json); echo "$out" | python -c "import json,sys; d=json.load(sys.stdin); assert d["error"]["code"]=='E_INVALID_INPUT'; print('fail-closed OK')"
+
+      - name: Offline MCP handshake probe
+        run: |
+          python - <<'PY'
+          import json, subprocess, sys
+          msgs = [
+              {"jsonrpc": "2.0", "id": 1, "method": "initialize",
+               "params": {"protocolVersion": "2024-11-05"}},
+              {"jsonrpc": "2.0", "id": 2, "method": "tools/list"},
+          ]
+          stdin = "\n".join(json.dumps(m) for m in msgs) + "\n"
+          p = subprocess.run([sys.executable, "mcp_server.py"], input=stdin,
+                             capture_output=True, text=True, timeout=60)
+          lines = [json.loads(x) for x in p.stdout.splitlines() if x.strip()]
+          assert lines[0]["result"]["serverInfo"]["name"] == "ttagent"
+          names = [t["name"] for t in lines[1]["result"]["tools"]]
+          assert names == ["extract_video", "lookup_video", "read_manifest",
+                           "get_schema"], names
+          print("MCP handshake OK:", names)
+          PY

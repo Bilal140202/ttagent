@@ -1,0 +1,12 @@
+# ttagent — outputs and artifacts stay out of version control
+tiktok_media/
+demo_output/
+*.part
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.DS_Store

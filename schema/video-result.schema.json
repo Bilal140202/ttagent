@@ -1,0 +1,208 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/Bilal140202/ttagent/schema/video-result.schema.json",
+  "title": "ttagent video_manifest envelope",
+  "description": "The full output contract of one ttagent run (schema_version 1.0). Every top-level key is always present; explicit nullability is the law — null means 'the public surface did not expose this', never 'we lost it'.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "source",
+    "request",
+    "status",
+    "video",
+    "errors",
+    "metadata"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "source": {
+      "type": "object",
+      "required": ["tool", "version", "generated_at"],
+      "properties": {
+        "tool": { "const": "ttagent" },
+        "version": { "type": "string" },
+        "generated_at": { "type": ["string", "null"], "format": "date-time" }
+      }
+    },
+    "request": {
+      "type": "object",
+      "required": ["input", "video_id", "canonical_url", "options"],
+      "properties": {
+        "input": { "type": "string", "description": "verbatim user input" },
+        "video_id": { "type": ["string", "null"] },
+        "canonical_url": { "type": ["string", "null"] },
+        "options": {
+          "type": "object",
+          "required": ["download_media", "download_music"],
+          "properties": {
+            "download_media": { "type": "boolean" },
+            "download_music": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "status": {
+      "enum": ["ok", "partial", "empty"],
+      "description": "ok = decoded and no run-level errors; partial = decoded but errors[] is non-empty (or metadata-only decode); empty = nothing decoded."
+    },
+    "video": {
+      "type": ["object", "null"],
+      "required": [
+        "video_id", "url", "title", "region", "created_at", "duration",
+        "author", "extraction_source", "media", "stats"
+      ],
+      "properties": {
+        "video_id": { "type": ["string", "null"], "pattern": "^[0-9]+$" },
+        "url": { "type": ["string", "null"] },
+        "title": { "type": ["string", "null"] },
+        "region": { "type": ["string", "null"] },
+        "created_at": { "type": ["string", "null"], "format": "date-time" },
+        "duration": { "type": ["number", "null"] },
+        "author": {
+          "type": "object",
+          "required": ["unique_id", "nickname", "avatar_url", "author_id"],
+          "properties": {
+            "unique_id": { "type": ["string", "null"] },
+            "nickname": { "type": ["string", "null"] },
+            "avatar_url": { "type": ["string", "null"] },
+            "author_id": { "type": ["string", "null"] }
+          }
+        },
+        "extraction_source": {
+          "enum": ["tikwm", "embed_v2", "tiklydown", "oembed", null],
+          "description": "Which decode slot produced this video — provenance is not optional."
+        },
+        "media": {
+          "type": "object",
+          "required": ["video", "covers", "music", "images"],
+          "properties": {
+            "video": { "$ref": "#/definitions/videoFile" },
+            "covers": { "$ref": "#/definitions/covers" },
+            "music": { "$ref": "#/definitions/music" },
+            "images": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/slide" }
+            }
+          }
+        },
+        "stats": {
+          "type": "object",
+          "required": ["plays", "likes", "comments", "shares", "collects", "downloads"],
+          "properties": {
+            "plays": { "type": ["integer", "null"] },
+            "likes": { "type": ["integer", "null"] },
+            "comments": { "type": ["integer", "null"] },
+            "shares": { "type": ["integer", "null"] },
+            "collects": { "type": ["integer", "null"] },
+            "downloads": { "type": ["integer", "null"] }
+          }
+        }
+      }
+    },
+    "errors": { "type": "array", "items": { "$ref": "#/definitions/error" } },
+    "metadata": {
+      "type": "object",
+      "required": ["duration_sec", "decode_slots_tried", "counts"],
+      "properties": {
+        "duration_sec": { "type": "number" },
+        "decode_slots_tried": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["slot", "outcome"],
+            "properties": {
+              "slot": { "type": "string" },
+              "outcome": { "type": "string" }
+            }
+          }
+        },
+        "counts": {
+          "type": "object",
+          "required": ["videos", "images", "audio_tracks", "downloaded_media", "failed_downloads"],
+          "properties": {
+            "videos": { "type": "integer" },
+            "images": { "type": "integer" },
+            "audio_tracks": { "type": "integer" },
+            "downloaded_media": { "type": "integer" },
+            "failed_downloads": { "type": "integer" }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "videoFile": {
+      "type": ["object", "null"],
+      "required": ["url", "hd_url", "watermarked_url", "width", "height", "duration", "file", "hd_file", "watermarked_file", "downloaded", "downloadable", "reason"],
+      "properties": {
+        "url": { "type": ["string", "null"], "description": "primary (clean, HD-preferred) video URL" },
+        "hd_url": { "type": ["string", "null"], "description": "distinct HD variant when the slot exposes one" },
+        "watermarked_url": { "type": ["string", "null"] },
+        "width": { "type": ["integer", "null"] },
+        "height": { "type": ["integer", "null"] },
+        "duration": { "type": ["number", "null"] },
+        "file": { "type": ["string", "null"] },
+        "hd_file": { "type": ["string", "null"] },
+        "watermarked_file": { "type": ["string", "null"] },
+        "downloaded": { "type": "boolean" },
+        "downloadable": { "type": "boolean" },
+        "reason": { "type": ["string", "null"], "description": "no_video_url_exposed | metadata_only | download_failed | url_outside_delivery_allowlist | null" }
+      }
+    },
+    "covers": {
+      "type": "object",
+      "required": ["cover_url", "cover_file", "cover_downloaded", "origin_cover_url", "origin_cover_file", "origin_cover_downloaded"],
+      "properties": {
+        "cover_url": { "type": ["string", "null"] },
+        "cover_file": { "type": ["string", "null"] },
+        "cover_downloaded": { "type": "boolean" },
+        "origin_cover_url": { "type": ["string", "null"] },
+        "origin_cover_file": { "type": ["string", "null"] },
+        "origin_cover_downloaded": { "type": "boolean" }
+      }
+    },
+    "music": {
+      "type": "object",
+      "required": ["url", "title", "author", "original", "duration", "music_id", "file", "downloaded", "downloadable", "reason"],
+      "properties": {
+        "url": { "type": ["string", "null"] },
+        "title": { "type": ["string", "null"] },
+        "author": { "type": ["string", "null"] },
+        "original": { "type": ["boolean", "null"] },
+        "duration": { "type": ["number", "null"] },
+        "music_id": { "type": ["string", "null"] },
+        "file": { "type": ["string", "null"] },
+        "downloaded": { "type": "boolean" },
+        "downloadable": { "type": "boolean" },
+        "reason": { "type": ["string", "null"] }
+      }
+    },
+    "slide": {
+      "type": "object",
+      "required": ["url", "slide_index", "file", "downloaded", "downloadable", "reason"],
+      "properties": {
+        "url": { "type": ["string", "null"] },
+        "slide_index": { "type": ["integer", "null"] },
+        "file": { "type": ["string", "null"] },
+        "downloaded": { "type": "boolean" },
+        "downloadable": { "type": "boolean" },
+        "reason": { "type": ["string", "null"] }
+      }
+    },
+    "error": {
+      "type": "object",
+      "required": ["stage", "code", "message", "subject"],
+      "properties": {
+        "stage": { "enum": ["discovery", "decoder", "fetcher", "orchestrator"] },
+        "code": {
+          "enum": [
+            "E_INVALID_INPUT", "E_SHORTLINK_DEAD", "E_VIDEO_UNAVAILABLE",
+            "E_DECODE_FAILED", "E_DOWNLOAD_FAILED", "E_MANIFEST_WRITE_FAILED"
+          ]
+        },
+        "message": { "type": "string" },
+        "subject": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

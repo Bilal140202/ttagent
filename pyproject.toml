@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ttagent"
+version = "1.0.0"
+description = "Agentic TikTok video/soundtrack harvester for AI agents — no login, no API keys, no browser. MCP wrapper included."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [{ name = "Bilal140202" }]
+keywords = ["tiktok", "agent", "ai-agents", "mcp", "model-context-protocol", "scraper", "media-downloader", "archiver", "cli", "harvester", "downloader"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Communications",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Multimedia :: Video",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/Bilal140202/ttagent"
+Documentation = "https://github.com/Bilal140202/ttagent#readme"
+Repository = "https://github.com/Bilal140202/ttagent"
+Issues = "https://github.com/Bilal140202/ttagent/issues"
+Changelog = "https://github.com/Bilal140202/ttagent/blob/main/RELEASE_NOTES.md"
+
+[project.scripts]
+ttagent = "ttagent:main"
+
+[tool.setuptools]
+packages = ["ttagent"]

@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Endpoint matrix (read before filing)
+    url: https://github.com/Bilal140202/ttagent/blob/main/docs/endpoint-matrix.md
+    about: Most "it stopped working" reports are a documented surface flip — check the matrix first.
