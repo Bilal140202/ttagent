@@ -33,7 +33,7 @@ jobs:
           doc = json.load(open("schema/video-result.schema.json"))
           assert doc["$schema"] == "http://json-schema.org/draft-07/schema#"
           assert doc["properties"]["schema_version"]["const"] == "1.0"
-          for d in ("image", "video", "error"):
+          for d in ("videoFile", "covers", "music", "slide", "error"):
               assert d in doc["definitions"], d
           print("schema OK")
           PY
